@@ -11,7 +11,7 @@ This sketch turns an M5Stack Atom Echo into a Sony ZV-E10 Bluetooth shutter remo
 
 ## Pairing Cue
 
-- If the Atom Echo boots without a saved camera and later completes its first successful pairing/connection, it plays `paired.wav` once.
+- On each boot, the first successful camera connection plays `paired.wav` once.
 - The paired cue does not replay on later reconnects in the same boot.
 
 ## Build

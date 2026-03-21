@@ -29,8 +29,11 @@ enum class PendingAction : uint8_t {
 PendingAction pendingAction = PendingAction::None;
 LedState currentLedState = LedState::Unknown;
 bool resetLatch = false;
-bool hadStoredPeerAtBoot = false;
 bool pairedCuePlayedThisBoot = false;
+bool previousReadyState = false;
+SonyBleRemote::State previousRemoteState = SonyBleRemote::State::Booting;
+bool previousConnectedState = false;
+bool previousStoredPeerState = false;
 int8_t lastShutterCueIndex = -1;
 
 constexpr CueAsset kShutterCueOptions[] = {
@@ -42,9 +45,62 @@ constexpr size_t kShutterCueCount =
     sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
 constexpr uint8_t kLedPin = 27;
 constexpr uint8_t kLedBrightness = 48;
+constexpr bool kEnableSerialDebug = false;
+
+bool isReadyState(SonyBleRemote::State state) {
+  switch (state) {
+    case SonyBleRemote::State::Ready:
+    case SonyBleRemote::State::Focusing:
+    case SonyBleRemote::State::Shooting:
+      return true;
+    case SonyBleRemote::State::Booting:
+    case SonyBleRemote::State::ScanningPair:
+    case SonyBleRemote::State::ScanningReconnect:
+    case SonyBleRemote::State::Connecting:
+    case SonyBleRemote::State::Error:
+      return false;
+  }
+
+  return false;
+}
+
+const __FlashStringHelper* stateLabel(SonyBleRemote::State state) {
+  switch (state) {
+    case SonyBleRemote::State::Booting: return F("Booting");
+    case SonyBleRemote::State::ScanningPair: return F("ScanningPair");
+    case SonyBleRemote::State::ScanningReconnect: return F("ScanningReconnect");
+    case SonyBleRemote::State::Connecting: return F("Connecting");
+    case SonyBleRemote::State::Ready: return F("Ready");
+    case SonyBleRemote::State::Focusing: return F("Focusing");
+    case SonyBleRemote::State::Shooting: return F("Shooting");
+    case SonyBleRemote::State::Error: return F("Error");
+  }
+
+  return F("Unknown");
+}
+
+void logSnapshotChange(const SonyBleRemote::Snapshot& shot, bool ready) {
+  if (!kEnableSerialDebug) {
+    return;
+  }
+
+  if (shot.state == previousRemoteState && shot.connected == previousConnectedState &&
+      shot.hasStoredPeer == previousStoredPeerState && ready == previousReadyState) {
+    return;
+  }
+
+  Serial.print(F("[remote] state="));
+  Serial.print(stateLabel(shot.state));
+  Serial.print(F(" connected="));
+  Serial.print(shot.connected ? F("true") : F("false"));
+  Serial.print(F(" storedPeer="));
+  Serial.print(shot.hasStoredPeer ? F("true") : F("false"));
+  Serial.print(F(" ready="));
+  Serial.println(ready ? F("true") : F("false"));
+}
 
 LedState ledStateFromSnapshot(const SonyBleRemote::Snapshot& shot) {
-  if (shot.connected) {
+  if (isReadyState(shot.state)) {
     return LedState::Connected;
   }
 
@@ -133,17 +189,29 @@ void triggerPendingActionIfReady() {
 }
 
 void updatePairingCue() {
-  if (hadStoredPeerAtBoot || pairedCuePlayedThisBoot) {
+  if (pairedCuePlayedThisBoot) {
     return;
   }
 
   const SonyBleRemote::Snapshot shot = remote.snapshot();
-  if (!shot.connected || !shot.hasStoredPeer) {
+  const bool ready = isReadyState(shot.state);
+  if (!ready || previousReadyState) {
     return;
   }
 
   pairedCuePlayedThisBoot = true;
   playCue(kPairedWav, kPairedWavLen, true);
+}
+
+void updateConnectionTracking() {
+  const SonyBleRemote::Snapshot shot = remote.snapshot();
+  const bool ready = isReadyState(shot.state);
+  logSnapshotChange(shot, ready);
+
+  previousRemoteState = shot.state;
+  previousConnectedState = shot.connected;
+  previousStoredPeerState = shot.hasStoredPeer;
+  previousReadyState = ready;
 }
 
 void handleConnectedButton() {
@@ -207,6 +275,10 @@ void setup() {
   cfg.internal_mic = false;
   M5.begin(cfg);
 
+  if (kEnableSerialDebug) {
+    Serial.begin(115200);
+  }
+
   auto speakerConfig = M5.Speaker.config();
   speakerConfig.sample_rate = 24000;
   M5.Speaker.config(speakerConfig);
@@ -214,8 +286,8 @@ void setup() {
   M5.Speaker.setVolume(180);
 
   remote.begin("ZV-E10");
-  hadStoredPeerAtBoot = remote.snapshot().hasStoredPeer;
   updateLedState();
+  updateConnectionTracking();
 }
 
 void loop() {
@@ -226,6 +298,7 @@ void loop() {
   handleButton();
   updatePairingCue();
   triggerPendingActionIfReady();
+  updateConnectionTracking();
 
   delay(5);
 }
