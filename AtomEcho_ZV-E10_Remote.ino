@@ -8,6 +8,7 @@
 namespace {
 
 SonyBleRemote remote;
+m5::Button_Class buttonA;
 
 struct CueAsset {
   const uint8_t* wavData;
@@ -45,7 +46,7 @@ constexpr size_t kShutterCueCount =
     sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
 constexpr uint8_t kLedPin = 27;
 constexpr uint8_t kLedBrightness = 48;
-constexpr bool kEnableSerialDebug = false;
+constexpr bool kEnableSerialDebug = true;
 
 bool isReadyState(SonyBleRemote::State state) {
   switch (state) {
@@ -117,6 +118,24 @@ void applyLedState(LedState nextState) {
   }
 
   currentLedState = nextState;
+
+  if (kEnableSerialDebug) {
+    Serial.print(F("[led] "));
+    switch (nextState) {
+      case LedState::Unpaired:
+        Serial.println(F("Unpaired rgb(48,0,48)"));
+        break;
+      case LedState::PairedDisconnected:
+        Serial.println(F("PairedDisconnected rgb(48,0,0)"));
+        break;
+      case LedState::Connected:
+        Serial.println(F("Connected rgb(0,48,0)"));
+        break;
+      case LedState::Unknown:
+        Serial.println(F("Unknown rgb(0,0,0)"));
+        break;
+    }
+  }
 
   switch (nextState) {
     case LedState::Unpaired:
@@ -217,18 +236,18 @@ void updateConnectionTracking() {
 void handleConnectedButton() {
   resetLatch = false;
 
-  if (M5.BtnA.wasHold()) {
+  if (buttonA.wasHold()) {
     stopCue();
     remote.beginFocus();
     return;
   }
 
-  if (M5.BtnA.wasReleasedAfterHold()) {
+  if (buttonA.wasReleasedAfterHold()) {
     remote.endFocus();
     return;
   }
 
-  if (!M5.BtnA.wasClicked()) {
+  if (!buttonA.wasClicked()) {
     return;
   }
 
@@ -242,19 +261,19 @@ void handleConnectedButton() {
 }
 
 void handleDisconnectedButton() {
-  if (!resetLatch && M5.BtnA.pressedFor(2000)) {
+  if (!resetLatch && buttonA.pressedFor(2000)) {
     stopCue();
     remote.clearPeerAndRestartPairing();
     resetLatch = true;
     return;
   }
 
-  if (M5.BtnA.wasClicked()) {
+  if (buttonA.wasClicked()) {
     playCue(kPairingWav, kPairingWavLen, true);
     return;
   }
 
-  if (M5.BtnA.wasReleased()) {
+  if (buttonA.wasReleased()) {
     resetLatch = false;
   }
 }
@@ -271,15 +290,17 @@ void handleButton() {
 }  // namespace
 
 void setup() {
-  auto cfg = M5.config();
-  cfg.internal_mic = false;
-  M5.begin(cfg);
-
   if (kEnableSerialDebug) {
     Serial.begin(115200);
   }
 
+  pinMode(GPIO_NUM_39, INPUT);
+
   auto speakerConfig = M5.Speaker.config();
+  speakerConfig.pin_data_out = GPIO_NUM_22;
+  speakerConfig.pin_bck = GPIO_NUM_19;
+  speakerConfig.pin_ws = GPIO_NUM_33;
+  speakerConfig.magnification = 12;
   speakerConfig.sample_rate = 24000;
   M5.Speaker.config(speakerConfig);
   M5.Speaker.begin();
@@ -291,7 +312,7 @@ void setup() {
 }
 
 void loop() {
-  M5.update();
+  buttonA.setRawState(millis(), digitalRead(GPIO_NUM_39) == LOW);
 
   remote.loop();
   updateLedState();
