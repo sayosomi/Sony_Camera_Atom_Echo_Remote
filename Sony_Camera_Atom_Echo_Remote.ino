@@ -289,7 +289,7 @@ void setup() {
   M5.Speaker.begin();
   M5.Speaker.setVolume(180);
 
-  remote.begin("ZV-E10");
+  remote.begin("Sony");
   playCurrentSearchCue();
   updateLedState();
   updateConnectionTracking();

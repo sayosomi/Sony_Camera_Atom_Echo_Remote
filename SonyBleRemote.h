@@ -33,7 +33,7 @@ public:
   SonyBleRemote();
   ~SonyBleRemote();
 
-  void begin(const String& targetName = "ZV-E10");
+  void begin(const String& targetName = "Sony");
   void loop();
 
   bool triggerShutter();
@@ -100,7 +100,7 @@ private:
 
   ScanMode scanMode_ = ScanMode::Pairing;
   State state_ = State::Booting;
-  String targetName_ = "ZV-E10";
+  String targetName_ = "Sony";
   String storedAddress_;
   String storedName_;
 

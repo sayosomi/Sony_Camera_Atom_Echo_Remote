@@ -111,7 +111,7 @@ void SonyBleRemote::begin(const String& targetName) {
   targetName_ = targetName;
   loadStoredPeer();
 
-  BLEDevice::init("AtomEcho-ZV-E10");
+  BLEDevice::init("AtomEcho-SonyRemote");
   BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT);
 
   securityCallbacks_ = new SecurityCallbacks(*this);

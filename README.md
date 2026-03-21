@@ -1,6 +1,6 @@
 # Sony Camera Atom Echo Remote
 
-Turn an M5Stack Atom Echo into a Bluetooth shutter remote for the Sony ZV-E10.
+Turn an M5Stack Atom Echo into a Bluetooth shutter remote for Sony cameras that support Bluetooth shutter control.
 
 This project is meant to be easy to flash and use:
 
@@ -12,7 +12,7 @@ This project is meant to be easy to flash and use:
 ## What You Need
 
 - M5Stack Atom Echo
-- Sony ZV-E10 with Bluetooth remote control enabled
+- Sony camera that supports Bluetooth shutter control
 - USB cable for the Atom Echo
 - Arduino IDE 2.x
 
@@ -66,7 +66,7 @@ Click the normal Arduino IDE Upload button.
 
 ### Pair the camera
 
-1. Enable Bluetooth remote control on the Sony ZV-E10
+1. Enable Bluetooth remote control on the Sony camera
 2. Put the camera into Bluetooth pairing mode
 3. Power the Atom Echo and upload the sketch if you have not already
 4. If the Atom Echo has no saved camera, it will play `pairing.wav`
@@ -200,3 +200,5 @@ Verified working with:
 
 - Sony ZV-E10 (body firmware 2.02)
 - M5Stack Atom Echo (standard / non-S3 model)
+
+This repository has only been verified with Sony ZV-E10 body firmware 2.02. Other Sony camera models are unverified here, even if they support Bluetooth shutter control.
