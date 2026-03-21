@@ -40,6 +40,8 @@ constexpr CueAsset kShutterCueOptions[] = {
 };
 constexpr size_t kShutterCueCount =
     sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
+constexpr uint8_t kLedPin = 27;
+constexpr uint8_t kLedBrightness = 48;
 
 LedState ledStateFromSnapshot(const SonyBleRemote::Snapshot& shot) {
   if (shot.connected) {
@@ -62,16 +64,16 @@ void applyLedState(LedState nextState) {
 
   switch (nextState) {
     case LedState::Unpaired:
-      M5.Led.setAllColor(255, 0, 255);
+      rgbLedWrite(kLedPin, kLedBrightness, 0, kLedBrightness);
       return;
     case LedState::PairedDisconnected:
-      M5.Led.setAllColor(255, 0, 0);
+      rgbLedWrite(kLedPin, kLedBrightness, 0, 0);
       return;
     case LedState::Connected:
-      M5.Led.setAllColor(0, 255, 0);
+      rgbLedWrite(kLedPin, 0, kLedBrightness, 0);
       return;
     case LedState::Unknown:
-      M5.Led.setAllColor(0, 0, 0);
+      rgbLedWrite(kLedPin, 0, 0, 0);
       return;
   }
 }
