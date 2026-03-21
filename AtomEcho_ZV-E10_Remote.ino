@@ -14,12 +14,20 @@ struct CueAsset {
   size_t wavLength;
 };
 
+enum class LedState : uint8_t {
+  Unknown,
+  Unpaired,
+  PairedDisconnected,
+  Connected,
+};
+
 enum class PendingAction : uint8_t {
   None,
   ShutterAfterCue,
 };
 
 PendingAction pendingAction = PendingAction::None;
+LedState currentLedState = LedState::Unknown;
 bool resetLatch = false;
 bool hadStoredPeerAtBoot = false;
 bool pairedCuePlayedThisBoot = false;
@@ -32,6 +40,45 @@ constexpr CueAsset kShutterCueOptions[] = {
 };
 constexpr size_t kShutterCueCount =
     sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
+
+LedState ledStateFromSnapshot(const SonyBleRemote::Snapshot& shot) {
+  if (shot.connected) {
+    return LedState::Connected;
+  }
+
+  if (shot.hasStoredPeer) {
+    return LedState::PairedDisconnected;
+  }
+
+  return LedState::Unpaired;
+}
+
+void applyLedState(LedState nextState) {
+  if (nextState == currentLedState) {
+    return;
+  }
+
+  currentLedState = nextState;
+
+  switch (nextState) {
+    case LedState::Unpaired:
+      M5.Led.setAllColor(255, 0, 255);
+      return;
+    case LedState::PairedDisconnected:
+      M5.Led.setAllColor(255, 0, 0);
+      return;
+    case LedState::Connected:
+      M5.Led.setAllColor(0, 255, 0);
+      return;
+    case LedState::Unknown:
+      M5.Led.setAllColor(0, 0, 0);
+      return;
+  }
+}
+
+void updateLedState() {
+  applyLedState(ledStateFromSnapshot(remote.snapshot()));
+}
 
 bool speakerBusy() {
   return M5.Speaker.isPlaying();
@@ -166,12 +213,14 @@ void setup() {
 
   remote.begin("ZV-E10");
   hadStoredPeerAtBoot = remote.snapshot().hasStoredPeer;
+  updateLedState();
 }
 
 void loop() {
   M5.update();
 
   remote.loop();
+  updateLedState();
   handleButton();
   updatePairingCue();
   triggerPendingActionIfReady();
