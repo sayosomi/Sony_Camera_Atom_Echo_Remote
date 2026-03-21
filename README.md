@@ -1,4 +1,4 @@
-# AtomEcho ZV-E10 Remote
+# Sony Camera Atom Echo Remote
 
 Turn an M5Stack Atom Echo into a Bluetooth shutter remote for the Sony ZV-E10.
 
@@ -46,7 +46,7 @@ In `Tools > Manage Libraries`:
 
 ### 3. Open the sketch
 
-Open `AtomEcho_ZV-E10_Remote.ino` in Arduino IDE.
+Open `Sony_Camera_Atom_Echo_Remote.ino` in Arduino IDE.
 
 ### 4. Select the correct board settings
 
@@ -109,13 +109,13 @@ Hold `BtnA` for 2 seconds while disconnected to clear the saved bond, then pair 
 Compile:
 
 ```bash
-arduino-cli compile --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/AtomEcho_ZV-E10_Remote
+arduino-cli compile --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/Sony_Camera_Atom_Echo_Remote
 ```
 
 Upload:
 
 ```bash
-arduino-cli upload -p /dev/cu.usbserial-0001 --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/AtomEcho_ZV-E10_Remote
+arduino-cli upload -p /dev/cu.usbserial-0001 --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/Sony_Camera_Atom_Echo_Remote
 ```
 
 Replace the port with the current Atom Echo serial device on your machine.
