@@ -184,6 +184,31 @@ bool SonyBleRemote::triggerShutter() {
   return false;
 }
 
+bool SonyBleRemote::triggerShutterFromFocusHold() {
+  if (!isConnected() || busy_ || !focusing_) {
+    return false;
+  }
+
+  busy_ = true;
+  setState(State::Shooting, "Completing focus-hold shot");
+
+  const bool ok =
+      writeCommand(kCmdShutterDown, sizeof(kCmdShutterDown)) &&
+      writeCommand(kCmdShutterUp, sizeof(kCmdShutterUp)) &&
+      writeCommand(kCmdFocusUp, sizeof(kCmdFocusUp));
+
+  busy_ = false;
+  focusing_ = false;
+
+  if (ok) {
+    setState(State::Ready, "Shot sent");
+    return true;
+  }
+
+  setState(State::Error, "Focus-hold shutter failed");
+  return false;
+}
+
 bool SonyBleRemote::beginFocus() {
   if (!isConnected() || busy_ || focusing_) {
     return false;

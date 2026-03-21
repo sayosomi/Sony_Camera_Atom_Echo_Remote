@@ -22,12 +22,6 @@ enum class LedState : uint8_t {
   Connected,
 };
 
-enum class PendingAction : uint8_t {
-  None,
-  ShutterAfterCue,
-};
-
-PendingAction pendingAction = PendingAction::None;
 LedState currentLedState = LedState::Unknown;
 bool resetLatch = false;
 bool pairedCuePlayedThisBoot = false;
@@ -157,10 +151,6 @@ void updateLedState() {
   applyLedState(ledStateFromSnapshot(remote.snapshot()));
 }
 
-bool speakerBusy() {
-  return M5.Speaker.isPlaying();
-}
-
 bool playCue(const uint8_t* wavData, size_t wavLength, bool stopCurrentSound = true) {
   if (!M5.Speaker.isEnabled()) {
     return false;
@@ -170,7 +160,6 @@ bool playCue(const uint8_t* wavData, size_t wavLength, bool stopCurrentSound = t
 }
 
 void stopCue() {
-  pendingAction = PendingAction::None;
   if (M5.Speaker.isEnabled()) {
     M5.Speaker.stop();
   }
@@ -192,19 +181,6 @@ CueAsset selectShutterCue() {
 
   lastShutterCueIndex = static_cast<int8_t>(selectedIndex);
   return kShutterCueOptions[selectedIndex];
-}
-
-void triggerPendingActionIfReady() {
-  if (pendingAction == PendingAction::None || speakerBusy()) {
-    return;
-  }
-
-  const PendingAction action = pendingAction;
-  pendingAction = PendingAction::None;
-
-  if (action == PendingAction::ShutterAfterCue) {
-    remote.triggerShutter();
-  }
 }
 
 void updatePairingCue() {
@@ -236,28 +212,24 @@ void updateConnectionTracking() {
 void handleConnectedButton() {
   resetLatch = false;
 
-  if (buttonA.wasHold()) {
+  if (buttonA.wasPressed()) {
     stopCue();
     remote.beginFocus();
     return;
   }
 
-  if (buttonA.wasReleasedAfterHold()) {
-    remote.endFocus();
+  if (!buttonA.wasReleased()) {
     return;
   }
 
-  if (!buttonA.wasClicked()) {
+  const SonyBleRemote::Snapshot shot = remote.snapshot();
+  if (!shot.focusing) {
     return;
   }
 
   const CueAsset shutterCue = selectShutterCue();
-  if (playCue(shutterCue.wavData, shutterCue.wavLength, true)) {
-    pendingAction = PendingAction::ShutterAfterCue;
-    return;
-  }
-
-  remote.triggerShutter();
+  playCue(shutterCue.wavData, shutterCue.wavLength, true);
+  remote.triggerShutterFromFocusHold();
 }
 
 void handleDisconnectedButton() {
@@ -318,7 +290,6 @@ void loop() {
   updateLedState();
   handleButton();
   updatePairingCue();
-  triggerPendingActionIfReady();
   updateConnectionTracking();
 
   delay(5);

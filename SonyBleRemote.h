@@ -43,6 +43,7 @@ public:
   void loop();
 
   bool triggerShutter();
+  bool triggerShutterFromFocusHold();
   bool beginFocus();
   bool endFocus();
   void clearPeerAndRestartPairing();
