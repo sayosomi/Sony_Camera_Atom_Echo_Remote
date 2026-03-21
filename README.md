@@ -108,19 +108,25 @@ Hold `BtnA` for 2 seconds while disconnected to clear the saved bond, then pair 
 
 ## Advanced: Arduino CLI
 
+Run these commands from the repository root.
+
 Compile:
 
 ```bash
-arduino-cli compile --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/Sony_Camera_Atom_Echo_Remote
+arduino-cli compile --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app .
 ```
 
 Upload:
 
 ```bash
-arduino-cli upload -p /dev/cu.usbserial-0001 --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app /Users/yosomi/Code/Sony_Camera_Atom_Echo_Remote
+arduino-cli upload -p <serial-port> --fqbn m5stack:esp32:m5stack_atom:PartitionScheme=huge_app .
 ```
 
-Replace the port with the current Atom Echo serial device on your machine.
+Find the current Atom Echo serial device with:
+
+```bash
+arduino-cli board list
+```
 
 ## Advanced: Replace or Add Audio Cues
 
