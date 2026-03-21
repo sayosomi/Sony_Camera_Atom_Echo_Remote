@@ -5,14 +5,17 @@ This sketch turns an M5Stack Atom Echo into a Sony ZV-E10 Bluetooth shutter remo
 ## Button Mapping
 
 - Connected, press `BtnA`: stop any current cue and send focus-half-press immediately.
-- Connected, release `BtnA`: start one of `shutter.wav`, `shutter2.wav`, or `shutter3.wav` at random without repeating the previous cue, then fire the shutter immediately.
+- Connected, release `BtnA`: start one of `shutter0.wav` through `shutter4.wav` at random, never repeat the previous shutter cue, and exclude `shutter0.wav` from the first shot after boot.
 - Not connected, short press `BtnA`: play `pairing.wav`.
 - Not connected, hold `BtnA` for 2 seconds: clear the saved BLE bond and restart pairing.
 
-## Pairing Cue
+## Connection Cues
 
-- On each boot, the first successful camera connection plays `paired.wav` once.
-- The paired cue does not replay on later reconnects in the same boot.
+- On boot with no saved camera, play `pairing.wav` once.
+- On boot with a saved camera, play `connecting.wav` once.
+- On any successful camera connection, play `connected.wav`.
+- Automatic reconnect retries do not replay the scan cue.
+- After clearing bond data with a long press, play `pairing.wav`.
 
 ## Build
 

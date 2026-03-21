@@ -24,7 +24,6 @@ enum class LedState : uint8_t {
 
 LedState currentLedState = LedState::Unknown;
 bool resetLatch = false;
-bool pairedCuePlayedThisBoot = false;
 bool previousReadyState = false;
 SonyBleRemote::State previousRemoteState = SonyBleRemote::State::Booting;
 bool previousConnectedState = false;
@@ -32,9 +31,11 @@ bool previousStoredPeerState = false;
 int8_t lastShutterCueIndex = -1;
 
 constexpr CueAsset kShutterCueOptions[] = {
-  {kShutterWav, kShutterWavLen},
+  {kShutter0Wav, kShutter0WavLen},
+  {kShutter1Wav, kShutter1WavLen},
   {kShutter2Wav, kShutter2WavLen},
   {kShutter3Wav, kShutter3WavLen},
+  {kShutter4Wav, kShutter4WavLen},
 };
 constexpr size_t kShutterCueCount =
     sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
@@ -165,37 +166,58 @@ void stopCue() {
   }
 }
 
+CueAsset searchCueForSnapshot(const SonyBleRemote::Snapshot& shot) {
+  if (shot.hasStoredPeer) {
+    return {kConnectingWav, kConnectingWavLen};
+  }
+
+  return {kPairingWav, kPairingWavLen};
+}
+
+void playCurrentSearchCue() {
+  const CueAsset cue = searchCueForSnapshot(remote.snapshot());
+  playCue(cue.wavData, cue.wavLength, true);
+}
+
 CueAsset selectShutterCue() {
-  if (kShutterCueCount == 1) {
+  if (kShutterCueCount <= 1) {
     lastShutterCueIndex = 0;
     return kShutterCueOptions[0];
   }
 
-  const uint32_t draw = esp_random() % (kShutterCueCount - 1);
-  size_t selectedIndex = draw;
+  size_t candidates[kShutterCueCount];
+  size_t candidateCount = 0;
+  const bool isFirstSelectionThisBoot = lastShutterCueIndex < 0;
 
-  if (lastShutterCueIndex >= 0 &&
-      selectedIndex >= static_cast<size_t>(lastShutterCueIndex)) {
-    ++selectedIndex;
+  for (size_t index = 0; index < kShutterCueCount; ++index) {
+    if (isFirstSelectionThisBoot && index == 0) {
+      continue;
+    }
+
+    if (!isFirstSelectionThisBoot &&
+        index == static_cast<size_t>(lastShutterCueIndex)) {
+      continue;
+    }
+
+    candidates[candidateCount++] = index;
   }
 
+  if (candidateCount == 0) {
+    lastShutterCueIndex = 0;
+    return kShutterCueOptions[0];
+  }
+
+  const size_t selectedIndex = candidates[esp_random() % candidateCount];
   lastShutterCueIndex = static_cast<int8_t>(selectedIndex);
   return kShutterCueOptions[selectedIndex];
 }
 
-void updatePairingCue() {
-  if (pairedCuePlayedThisBoot) {
-    return;
-  }
-
+void updateConnectedCue() {
   const SonyBleRemote::Snapshot shot = remote.snapshot();
   const bool ready = isReadyState(shot.state);
-  if (!ready || previousReadyState) {
-    return;
+  if (ready && !previousReadyState) {
+    playCue(kConnectedWav, kConnectedWavLen, true);
   }
-
-  pairedCuePlayedThisBoot = true;
-  playCue(kPairedWav, kPairedWavLen, true);
 }
 
 void updateConnectionTracking() {
@@ -236,6 +258,7 @@ void handleDisconnectedButton() {
   if (!resetLatch && buttonA.pressedFor(2000)) {
     stopCue();
     remote.clearPeerAndRestartPairing();
+    playCue(kPairingWav, kPairingWavLen, true);
     resetLatch = true;
     return;
   }
@@ -279,6 +302,7 @@ void setup() {
   M5.Speaker.setVolume(180);
 
   remote.begin("ZV-E10");
+  playCurrentSearchCue();
   updateLedState();
   updateConnectionTracking();
 }
@@ -289,7 +313,7 @@ void loop() {
   remote.loop();
   updateLedState();
   handleButton();
-  updatePairingCue();
+  updateConnectedCue();
   updateConnectionTracking();
 
   delay(5);
