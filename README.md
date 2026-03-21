@@ -1,6 +1,5 @@
 # Sony Camera Atom Echo Remote
-Demo video
-[![Watch the short demo on YouTube](https://github.com/user-attachments/assets/77385f0d-b155-4d69-a49a-0fc8abbbc3df)](https://youtube.com/shorts/k7Hf-AU4aaY)
+
 
 Turn an M5Stack Atom Echo into a Bluetooth shutter remote for Sony cameras that support Bluetooth shutter control.
 
@@ -10,6 +9,9 @@ This project is meant to be easy to flash and use:
 - No extra app on the camera
 - Spoken-style WAV cues play through the Atom Echo speaker
 - Audio files are already embedded in the sketch
+
+## Demo video (Lint to YouTube)
+[![Watch the short demo on YouTube](https://github.com/user-attachments/assets/77385f0d-b155-4d69-a49a-0fc8abbbc3df)](https://youtube.com/shorts/k7Hf-AU4aaY)
 
 ## What You Need
 
