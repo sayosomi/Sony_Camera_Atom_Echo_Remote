@@ -166,8 +166,30 @@ Then rebuild and upload the sketch again.
 - There is no SPIFFS or LittleFS upload step
 - The regeneration script requires `xxd` to be available on `PATH`
 
+## License Notes
+
+Except for the audio assets listed below, the files in this repository are licensed under the MIT License.
+
+Files not covered by the MIT License:
+
+- all `.wav` files in this repository
+- `AudioAssets.h`
+- `ShutterVariants.h`
+
+The WAV files in this repository were generated with `VOICEGER:ずんだもん (TTS)`.
+
+`AudioAssets.h` and `ShutterVariants.h` are generated files that embed data converted from those WAV files, so they should be treated as audio-derived assets.
+
+Those audio assets are subject to the Voiceger Zundamon audio license terms:
+
+https://zunko.jp/con_ongen_kiyaku.html
+
 ## References
 
 - M5Stack Arduino board setup: https://docs.m5stack.com/en/arduino/arduino_board
 - M5Stack Arduino library setup: https://docs.m5stack.com/en/arduino/arduino_library
 - M5Stack Atom Echo Arduino guide: https://docs.m5stack.com/en/arduino/m5atomecho/program
+
+## Implementation Note
+
+This project was implemented with Codex. Specification planning and behavior verification were performed by me.
