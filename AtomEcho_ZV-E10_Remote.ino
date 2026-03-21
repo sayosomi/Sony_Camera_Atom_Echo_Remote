@@ -264,7 +264,7 @@ void handleDisconnectedButton() {
   }
 
   if (buttonA.wasClicked()) {
-    playCue(kPairingWav, kPairingWavLen, true);
+    playCurrentSearchCue();
     return;
   }
 
