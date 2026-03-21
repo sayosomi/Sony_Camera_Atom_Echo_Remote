@@ -202,3 +202,15 @@ Verified working with:
 - M5Stack Atom Echo (standard / non-S3 model)
 
 This repository has only been verified with Sony ZV-E10 body firmware 2.02. Other Sony camera models are unverified here, even if they support Bluetooth shutter control.
+
+## Unofficial Notice
+
+This is a completely unofficial repository and has no affiliation with Sony in any way.
+
+## Creator Links
+
+I usually make Zundamon plushies and videos.
+
+- X: https://x.com/sayosomi
+- FANBOX: https://sayosomi.fanbox.cc/
+- BOOTH: https://sayosomi.booth.pm/
