@@ -10,7 +10,7 @@ This project is meant to be easy to flash and use:
 - Spoken-style WAV cues play through the Atom Echo speaker
 - Audio files are already embedded in the sketch
 
-## Demo video (Lint to YouTube)
+## Demo video (Link to YouTube)
 [![Watch the short demo on YouTube](https://github.com/user-attachments/assets/77385f0d-b155-4d69-a49a-0fc8abbbc3df)](https://youtube.com/shorts/k7Hf-AU4aaY)
 
 ## What You Need
