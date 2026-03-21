@@ -186,6 +186,8 @@ https://zunko.jp/con_ongen_kiyaku.html
 
 ## References
 
+- Reference repository: https://github.com/mybabysexy/sony_esp32_remote_controller
+- Development skill used during implementation: https://github.com/Sunwood-ai-labs/m5stack-arduino-cli-skill
 - M5Stack Arduino board setup: https://docs.m5stack.com/en/arduino/arduino_board
 - M5Stack Arduino library setup: https://docs.m5stack.com/en/arduino/arduino_library
 - M5Stack Atom Echo Arduino guide: https://docs.m5stack.com/en/arduino/m5atomecho/program
@@ -193,3 +195,8 @@ https://zunko.jp/con_ongen_kiyaku.html
 ## Implementation Note
 
 This project was implemented with Codex. Specification planning and behavior verification were performed by me.
+
+Verified working with:
+
+- Sony ZV-E10
+- M5Stack Atom Echo (standard / non-S3 model)
