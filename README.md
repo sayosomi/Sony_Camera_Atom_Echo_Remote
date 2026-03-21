@@ -198,5 +198,5 @@ This project was implemented with Codex. Specification planning and behavior ver
 
 Verified working with:
 
-- Sony ZV-E10
+- Sony ZV-E10 (body firmware 2.02)
 - M5Stack Atom Echo (standard / non-S3 model)
