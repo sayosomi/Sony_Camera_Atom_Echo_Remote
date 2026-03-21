@@ -2,6 +2,7 @@
 #include <esp_system.h>
 
 #include "AudioAssets.h"
+#include "CueAsset.h"
 #include "ShutterVariants.h"
 #include "SonyBleRemote.h"
 
@@ -9,11 +10,6 @@ namespace {
 
 SonyBleRemote remote;
 m5::Button_Class buttonA;
-
-struct CueAsset {
-  const uint8_t* wavData;
-  size_t wavLength;
-};
 
 enum class LedState : uint8_t {
   Unknown,
@@ -28,20 +24,10 @@ bool previousReadyState = false;
 SonyBleRemote::State previousRemoteState = SonyBleRemote::State::Booting;
 bool previousConnectedState = false;
 bool previousStoredPeerState = false;
-int8_t lastShutterCueIndex = -1;
-
-constexpr CueAsset kShutterCueOptions[] = {
-  {kShutter0Wav, kShutter0WavLen},
-  {kShutter1Wav, kShutter1WavLen},
-  {kShutter2Wav, kShutter2WavLen},
-  {kShutter3Wav, kShutter3WavLen},
-  {kShutter4Wav, kShutter4WavLen},
-};
-constexpr size_t kShutterCueCount =
-    sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
+int16_t lastShutterCueIndex = -1;
 constexpr uint8_t kLedPin = 27;
 constexpr uint8_t kLedBrightness = 48;
-constexpr bool kEnableSerialDebug = true;
+constexpr bool kEnableSerialDebug = false;
 
 bool isReadyState(SonyBleRemote::State state) {
   switch (state) {
@@ -190,7 +176,9 @@ CueAsset selectShutterCue() {
   const bool isFirstSelectionThisBoot = lastShutterCueIndex < 0;
 
   for (size_t index = 0; index < kShutterCueCount; ++index) {
-    if (isFirstSelectionThisBoot && index == 0) {
+    if (isFirstSelectionThisBoot &&
+        kFirstBootExcludedShutterCueIndex >= 0 &&
+        index == static_cast<size_t>(kFirstBootExcludedShutterCueIndex)) {
       continue;
     }
 
@@ -208,7 +196,7 @@ CueAsset selectShutterCue() {
   }
 
   const size_t selectedIndex = candidates[esp_random() % candidateCount];
-  lastShutterCueIndex = static_cast<int8_t>(selectedIndex);
+  lastShutterCueIndex = static_cast<int16_t>(selectedIndex);
   return kShutterCueOptions[selectedIndex];
 }
 

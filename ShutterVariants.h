@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include "CueAsset.h"
 
 static const uint8_t kShutter0Wav[] PROGMEM = {
   0x52, 0x49, 0x46, 0x46, 0x24, 0x45, 0x01, 0x00, 0x57, 0x41, 0x56, 0x45,
@@ -36126,3 +36126,12 @@ static const uint8_t kShutter4Wav[] PROGMEM = {
 };
 static const size_t kShutter4WavLen = 118172;
 
+static const CueAsset kShutterCueOptions[] = {
+  {kShutter0Wav, kShutter0WavLen},
+  {kShutter1Wav, kShutter1WavLen},
+  {kShutter2Wav, kShutter2WavLen},
+  {kShutter3Wav, kShutter3WavLen},
+  {kShutter4Wav, kShutter4WavLen},
+};
+static const size_t kShutterCueCount = sizeof(kShutterCueOptions) / sizeof(kShutterCueOptions[0]);
+static const int16_t kFirstBootExcludedShutterCueIndex = 0;

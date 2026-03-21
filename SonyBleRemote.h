@@ -26,14 +26,8 @@ public:
   struct Snapshot {
     State state = State::Booting;
     bool connected = false;
-    bool busy = false;
     bool hasStoredPeer = false;
     bool focusing = false;
-    String headline;
-    String detail;
-    String cameraName;
-    String cameraAddress;
-    int rssi = 0;
   };
 
   SonyBleRemote();
@@ -49,7 +43,6 @@ public:
   void clearPeerAndRestartPairing();
 
   bool isConnected() const;
-  bool isBusy() const;
   Snapshot snapshot() const;
 
 private:
@@ -76,7 +69,7 @@ private:
   void saveStoredPeer(BLEAdvertisedDevice& device);
   void clearStoredPeer();
   void clearBondedDevices();
-  void setState(State state, const String& detail = "");
+  void setState(State state);
   void handleDisconnect();
   void ensureClient();
 
@@ -110,10 +103,6 @@ private:
   String targetName_ = "ZV-E10";
   String storedAddress_;
   String storedName_;
-  String activeCameraName_;
-  String activeCameraAddress_;
-  String detail_;
-  int lastRssi_ = 0;
 
   bool initialized_ = false;
   bool scanActive_ = false;

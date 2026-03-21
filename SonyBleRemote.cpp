@@ -62,7 +62,8 @@ public:
   }
 
   void onPassKeyNotify(uint32_t pass_key) override {
-    owner_.setState(owner_.state_, String("Passkey ") + pass_key);
+    (void)pass_key;
+    owner_.setState(owner_.state_);
   }
 
   bool onSecurityRequest() override {
@@ -72,15 +73,17 @@ public:
   void onAuthenticationComplete(esp_ble_auth_cmpl_t auth_cmpl) override {
     if (auth_cmpl.success) {
       owner_.sawAuthSuccess_ = true;
-      owner_.setState(owner_.state_, "Bonded");
+      owner_.setState(owner_.state_);
       return;
     }
 
-    owner_.setState(State::Error, String("Auth failed: ") + auth_cmpl.fail_reason);
+    (void)auth_cmpl;
+    owner_.setState(State::Error);
   }
 
   bool onConfirmPIN(uint32_t pin) override {
-    owner_.setState(owner_.state_, String("Confirm PIN ") + pin);
+    (void)pin;
+    owner_.setState(owner_.state_);
     return true;
   }
 
@@ -131,8 +134,7 @@ void SonyBleRemote::begin(const String& targetName) {
   scan_->setActiveScan(true);
 
   scanMode_ = storedAddress_.isEmpty() ? ScanMode::Pairing : ScanMode::Reconnect;
-  setState(scanMode_ == ScanMode::Pairing ? State::ScanningPair : State::ScanningReconnect,
-           storedAddress_.isEmpty() ? "Waiting for camera pairing mode" : "Looking for saved camera");
+  setState(scanMode_ == ScanMode::Pairing ? State::ScanningPair : State::ScanningReconnect);
 
   initialized_ = true;
 }
@@ -165,7 +167,7 @@ bool SonyBleRemote::triggerShutter() {
 
   busy_ = true;
   focusing_ = false;
-  setState(State::Shooting, "Sending shutter sequence");
+  setState(State::Shooting);
 
   const bool ok =
       writeCommand(kCmdFocusDown, sizeof(kCmdFocusDown)) &&
@@ -176,11 +178,11 @@ bool SonyBleRemote::triggerShutter() {
   busy_ = false;
 
   if (ok) {
-    setState(State::Ready, "Shot sent");
+    setState(State::Ready);
     return true;
   }
 
-  setState(State::Error, "Shutter command failed");
+  setState(State::Error);
   return false;
 }
 
@@ -190,7 +192,7 @@ bool SonyBleRemote::triggerShutterFromFocusHold() {
   }
 
   busy_ = true;
-  setState(State::Shooting, "Completing focus-hold shot");
+  setState(State::Shooting);
 
   const bool ok =
       writeCommand(kCmdShutterDown, sizeof(kCmdShutterDown)) &&
@@ -201,11 +203,11 @@ bool SonyBleRemote::triggerShutterFromFocusHold() {
   focusing_ = false;
 
   if (ok) {
-    setState(State::Ready, "Shot sent");
+    setState(State::Ready);
     return true;
   }
 
-  setState(State::Error, "Focus-hold shutter failed");
+  setState(State::Error);
   return false;
 }
 
@@ -215,17 +217,17 @@ bool SonyBleRemote::beginFocus() {
   }
 
   busy_ = true;
-  setState(State::Focusing, "Focus down");
+  setState(State::Focusing);
   const bool ok = writeCommand(kCmdFocusDown, sizeof(kCmdFocusDown));
   busy_ = false;
 
   if (!ok) {
-    setState(State::Error, "Focus down failed");
+    setState(State::Error);
     return false;
   }
 
   focusing_ = true;
-  setState(State::Focusing, "Holding focus");
+  setState(State::Focusing);
   return true;
 }
 
@@ -235,17 +237,17 @@ bool SonyBleRemote::endFocus() {
   }
 
   busy_ = true;
-  setState(State::Ready, "Focus up");
+  setState(State::Ready);
   const bool ok = writeCommand(kCmdFocusUp, sizeof(kCmdFocusUp));
   busy_ = false;
   focusing_ = false;
 
   if (!ok) {
-    setState(State::Error, "Focus up failed");
+    setState(State::Error);
     return false;
   }
 
-  setState(State::Ready, "Ready");
+  setState(State::Ready);
   return true;
 }
 
@@ -267,41 +269,19 @@ void SonyBleRemote::clearPeerAndRestartPairing() {
 
   scanMode_ = ScanMode::Pairing;
   nextRetryAtMs_ = 0;
-  setState(State::ScanningPair, "Bond data cleared");
+  setState(State::ScanningPair);
 }
 
 bool SonyBleRemote::isConnected() const {
   return client_ != nullptr && client_->isConnected() && commandCharacteristic_ != nullptr;
 }
 
-bool SonyBleRemote::isBusy() const {
-  return busy_;
-}
-
 SonyBleRemote::Snapshot SonyBleRemote::snapshot() const {
   Snapshot shot;
   shot.state = state_;
   shot.connected = isConnected();
-  shot.busy = busy_;
   shot.hasStoredPeer = !storedAddress_.isEmpty();
   shot.focusing = focusing_;
-  shot.headline = [&]() -> String {
-    switch (state_) {
-      case State::Booting: return "BOOT";
-      case State::ScanningPair: return "PAIR";
-      case State::ScanningReconnect: return "RETRY";
-      case State::Connecting: return "LINK";
-      case State::Ready: return "READY";
-      case State::Focusing: return "FOCUS";
-      case State::Shooting: return "SHOT";
-      case State::Error: return "ERROR";
-    }
-    return "STATE";
-  }();
-  shot.detail = detail_;
-  shot.cameraName = activeCameraName_.isEmpty() ? storedName_ : activeCameraName_;
-  shot.cameraAddress = activeCameraAddress_.isEmpty() ? storedAddress_ : activeCameraAddress_;
-  shot.rssi = lastRssi_;
   return shot;
 }
 
@@ -311,11 +291,10 @@ void SonyBleRemote::startScanIfNeeded() {
   }
 
   scanMode_ = storedAddress_.isEmpty() ? ScanMode::Pairing : ScanMode::Reconnect;
-  setState(scanMode_ == ScanMode::Pairing ? State::ScanningPair : State::ScanningReconnect,
-           scanMode_ == ScanMode::Pairing ? "Put the ZV-E10 in pairing mode" : "Searching for saved camera");
+  setState(scanMode_ == ScanMode::Pairing ? State::ScanningPair : State::ScanningReconnect);
 
   if (!scan_->start(0, nullptr, false)) {
-    setState(State::Error, "Scan start failed");
+    setState(State::Error);
     nextRetryAtMs_ = millis() + kReconnectRetryMs;
     return;
   }
@@ -338,17 +317,11 @@ void SonyBleRemote::connectPendingDevice() {
   delete pendingDevice_;
   pendingDevice_ = nullptr;
 
-  lastRssi_ = device.getRSSI();
-  activeCameraName_ = device.haveName() ? device.getName() : storedName_;
-  activeCameraAddress_ = formatAddress(device.getAddress());
-
   if (!connectToDevice(device)) {
     commandCharacteristic_ = nullptr;
-    activeCameraName_.clear();
-    activeCameraAddress_.clear();
     nextRetryAtMs_ = millis() + kReconnectRetryMs;
     scanMode_ = storedAddress_.isEmpty() ? ScanMode::Pairing : ScanMode::Reconnect;
-    setState(State::Error, "Connect failed");
+    setState(State::Error);
   }
 }
 
@@ -391,15 +364,14 @@ bool SonyBleRemote::matchesStoredPeer(BLEAdvertisedDevice& device) const {
 bool SonyBleRemote::connectToDevice(BLEAdvertisedDevice& device) {
   ensureClient();
   if (client_ == nullptr) {
-    setState(State::Error, "BLE client unavailable");
+    setState(State::Error);
     return false;
   }
 
-  setState(State::Connecting, String("Connecting to ") +
-                               (device.haveName() ? device.getName() : formatAddress(device.getAddress())));
+  setState(State::Connecting);
 
   if (!client_->connect(const_cast<BLEAdvertisedDevice*>(&device))) {
-    setState(State::Error, "GATT connect failed");
+    setState(State::Error);
     return false;
   }
 
@@ -411,25 +383,25 @@ bool SonyBleRemote::connectToDevice(BLEAdvertisedDevice& device) {
   }
 
   saveStoredPeer(device);
-  setState(State::Ready, "Ready");
+  setState(State::Ready);
   return true;
 }
 
 bool SonyBleRemote::discoverRemote() {
   BLERemoteService* service = client_->getService(kServiceUuid);
   if (service == nullptr) {
-    setState(State::Error, "Service FF00 missing");
+    setState(State::Error);
     return false;
   }
 
   commandCharacteristic_ = service->getCharacteristic(kCommandUuid);
   if (commandCharacteristic_ == nullptr) {
-    setState(State::Error, "Characteristic FF01 missing");
+    setState(State::Error);
     return false;
   }
 
   if (!commandCharacteristic_->canWrite() && !commandCharacteristic_->canWriteNoResponse()) {
-    setState(State::Error, "Characteristic FF01 not writable");
+    setState(State::Error);
     commandCharacteristic_ = nullptr;
     return false;
   }
@@ -471,8 +443,6 @@ void SonyBleRemote::clearStoredPeer() {
 
   storedAddress_.clear();
   storedName_.clear();
-  activeCameraName_.clear();
-  activeCameraAddress_.clear();
 }
 
 void SonyBleRemote::clearBondedDevices() {
@@ -491,9 +461,8 @@ void SonyBleRemote::clearBondedDevices() {
   }
 }
 
-void SonyBleRemote::setState(State state, const String& detail) {
+void SonyBleRemote::setState(State state) {
   state_ = state;
-  detail_ = detail;
 }
 
 void SonyBleRemote::handleDisconnect() {
@@ -503,11 +472,11 @@ void SonyBleRemote::handleDisconnect() {
   nextRetryAtMs_ = millis() + kReconnectRetryMs;
 
   if (storedAddress_.isEmpty()) {
-    setState(State::ScanningPair, "Disconnected");
+    setState(State::ScanningPair);
     return;
   }
 
-  setState(State::ScanningReconnect, "Disconnected");
+  setState(State::ScanningReconnect);
 }
 
 void SonyBleRemote::ensureClient() {
