@@ -170,6 +170,41 @@ Then rebuild and upload the sketch again.
 ./scripts/regenerate-audio-headers.sh --source-dir /path/to/wavs
 ```
 
+### WAV format notes
+
+`./scripts/regenerate-audio-headers.sh` does not transcode audio. It only embeds the WAV bytes into generated headers, so playback compatibility depends on the source WAV format.
+
+Use this format for the safest results:
+
+- WAV / RIFF (little-endian)
+- PCM (`pcm_s16le`)
+- 16-bit
+- mono
+- 32000 Hz
+
+Avoid these formats because they may fail to play or produce noise:
+
+- compressed WAV formats such as ADPCM or mu-law
+- float PCM
+- 24-bit or 32-bit WAV
+- more than 2 channels
+- unusual or non-standard WAV headers
+
+You can inspect a file with:
+
+```bash
+file your.wav
+ffprobe -v error -select_streams a:0 \
+  -show_entries stream=codec_name,sample_rate,channels,bits_per_sample \
+  -of default=noprint_wrappers=1 your.wav
+```
+
+You can convert a file with:
+
+```bash
+ffmpeg -i input.wav -ac 1 -ar 32000 -c:a pcm_s16le output.wav
+```
+
 ## Notes
 
 - Audio is embedded directly in flash as WAV byte arrays
